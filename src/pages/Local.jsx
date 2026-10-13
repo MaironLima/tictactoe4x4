@@ -1,33 +1,46 @@
 import { useState } from 'react'
-import { emptyBoard, getResult } from '../../shared/game'
-import Board, { Scores, Status } from '../Board'
+import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import { GAMES } from '../../shared/games/index.js'
+import { other } from '../../shared/games/util.js'
+import Match from '../Match'
 
+// dois jogadores no mesmo aparelho, um de cada vez
 export default function Local() {
-  const [board, setBoard] = useState(emptyBoard)
-  const [starter, setStarter] = useState('X')
+  const { game } = useParams({ from: '/local/$game' })
+  const navigate = useNavigate()
+  const [match, setMatch] = useState(() => GAMES[game]?.local && { game, state: GAMES[game].init('X'), starter: 'X', moves: 0 })
   const [scores, setScores] = useState({ X: 0, O: 0, draw: 0 })
-  const result = getResult(board)
-  const other = starter === 'X' ? 'O' : 'X'
-  const turn = board.filter(Boolean).length % 2 === 0 ? starter : other
 
-  function play(i) {
-    const next = board.with(i, turn)
-    const r = getResult(next)
+  if (!match) return <p>Esse jogo não tem modo local. <Link to="/">Voltar</Link></p>
+
+  const g = GAMES[match.game]
+  const result = g.result(match.state)
+
+  function play(payload) {
+    const next = g.move(match.state, match.state.turn, payload)
+    if (!next) return
+    const r = g.result(next)
     if (r) setScores(s => ({ ...s, [r.winner]: s[r.winner] + 1 }))
-    setBoard(next)
+    setMatch({ ...match, state: next, moves: match.moves + 1 })
   }
 
-  function restart() {
-    setStarter(other) // alterna quem começa
-    setBoard(emptyBoard())
+  function next(id) {
+    const starter = other(match.starter) // alterna quem começa
+    setMatch({ game: id, state: GAMES[id].init(starter), starter, moves: 0 })
+    if (id !== match.game) navigate({ to: '/local/$game', params: { game: id }, replace: true })
   }
 
   return (
-    <div className="stack">
-      <Scores scores={scores} turn={turn} starter={starter} result={result} />
-      <Status result={result} turn={turn} fresh={board.every(c => c === null)} />
-      <Board board={board} onPlay={play} disabled={!!result} line={result?.line} />
-      {result && <button className="btn" onClick={restart}>Jogar de novo</button>}
-    </div>
+    <Match
+      game={match.game}
+      state={match.state}
+      result={result}
+      moves={match.moves}
+      scores={scores}
+      starter={match.starter}
+      play={play}
+      onNext={next}
+      onlyLocal
+    />
   )
 }

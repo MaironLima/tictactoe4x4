@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { GAMES } from '../../shared/games/index.js'
 import { api } from '../lib'
 
 export default function Home() {
@@ -8,20 +9,32 @@ export default function Home() {
   const [code, setCode] = useState('')
   const stats = useQuery({ queryKey: ['stats'], queryFn: () => api('/stats'), refetchInterval: 5000 })
   const create = useMutation({
-    mutationFn: () => api('/rooms', { method: 'POST' }),
+    mutationFn: game => api(`/rooms?game=${game}`, { method: 'POST' }),
     onSuccess: ({ code }) => navigate({ to: '/room/$code', params: { code } }),
   })
 
   return (
     <div className="stack">
-      <h1>Jogo da Velha 4x4</h1>
-      <p className="muted">Alinhe 3 na horizontal, vertical ou diagonal.</p>
+      <h1>Escolha um jogo</h1>
+      <p className="muted small">Na sala online dá pra trocar de jogo ao fim de cada partida.</p>
 
-      <Link to="/local" className="btn">Jogar local</Link>
-
-      <button className="btn" onClick={() => create.mutate()} disabled={create.isPending}>
-        {create.isPending ? 'Criando…' : 'Criar sala online'}
-      </button>
+      <div className="games">
+        {Object.values(GAMES).map(g => (
+          <div key={g.id} className="game-card">
+            <span className="game-emoji">{g.emoji}</span>
+            <div className="game-info">
+              <b>{g.name}</b>
+              <small className="muted">{g.rules}</small>
+            </div>
+            <div className="game-actions">
+              {g.local && <Link to="/local/$game" params={{ game: g.id }} className="btn">Local</Link>}
+              <button className="btn primary" onClick={() => create.mutate(g.id)} disabled={create.isPending}>
+                Online
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
       {create.isError && <p className="error">{create.error.message}</p>}
 
       <form

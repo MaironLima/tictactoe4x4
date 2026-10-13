@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
 import { api, playerId, socket } from '../lib'
-import Board, { Scores, Status } from '../Board'
+import Match from '../Match'
+import { GamePicker } from '../ui'
 
 export default function Room() {
   const { code } = useParams({ from: '/room/$code' })
@@ -15,7 +16,7 @@ export default function Room() {
 }
 
 function OnlineGame({ code }) {
-  const [state, setState] = useState(null)
+  const [room, setRoom] = useState(null)
   const [me, setMe] = useState(null)
   const [error, setError] = useState(null)
   const [connected, setConnected] = useState(socket.connected)
@@ -29,25 +30,26 @@ function OnlineGame({ code }) {
 
     socket.on('connect', onConnect)
     socket.on('disconnect', onDisconnect)
-    socket.on('state', setState)
+    socket.on('state', setRoom)
     if (socket.connected) join()
     else socket.connect()
 
     return () => {
       socket.off('connect', onConnect)
       socket.off('disconnect', onDisconnect)
-      socket.off('state', setState)
+      socket.off('state', setRoom)
       socket.disconnect()
     }
   }, [code])
 
   if (error) return <p className="error">{error}. <Link to="/">Voltar</Link></p>
-  if (!state || !me) return <p className="muted">Conectando…</p>
+  if (!room || !me) return <p className="muted">Conectando…</p>
 
-  const opp = me === 'X' ? 'O' : 'X'
-  const oppSeat = state.players[opp]
+  const oppSeat = room.players[me === 'X' ? 'O' : 'X']
   const waiting = !oppSeat
-  const canPlay = connected && !waiting && !state.result && state.turn === me
+  const { turn } = room.state
+  const canPlay = connected && !waiting && !room.result && (!turn || turn === me) // turn null = jogada simultânea
+  const newMatch = game => socket.emit('newMatch', { game })
 
   return (
     <div className="stack">
@@ -55,26 +57,33 @@ function OnlineGame({ code }) {
       {oppSeat && !oppSeat.online && <p className="banner">Oponente desconectado, aguardando reconexão…</p>}
 
       <p className="muted small">
-        Sala <b className="code">{state.code}</b> · você é <span className={`mark ${me}`}>{me}</span>
+        Sala <b className="code">{room.code}</b> · você é o jogador <span className={`mark ${me}`}>{me === 'X' ? 1 : 2}</span>
       </p>
 
-      {waiting ? (
+      {waiting && (
         <div className="stack">
           <p>Aguardando oponente. Envie o código:</p>
-          <button className="btn code big" onClick={() => navigator.clipboard?.writeText(state.code)} title="Copiar">
-            {state.code}
+          <button className="btn code big" onClick={() => navigator.clipboard?.writeText(room.code)} title="Copiar">
+            {room.code}
           </button>
         </div>
-      ) : (
-        <>
-          <Scores scores={state.scores} turn={state.turn} starter={state.starter} result={state.result} me={me} />
-          <Status result={state.result} turn={state.turn} me={me} fresh={state.board.every(c => c === null)} />
-        </>
       )}
 
-      <Board board={state.board} onPlay={i => socket.emit('move', i)} disabled={!canPlay} line={state.result?.line} />
+      <Match
+        game={room.game}
+        state={room.state}
+        result={room.result}
+        moves={room.moves}
+        scores={room.scores}
+        starter={room.starter}
+        me={me}
+        play={payload => socket.emit('move', payload)}
+        disabled={!canPlay}
+        flip={me === 'O'}
+        onNext={newMatch}
+      />
 
-      {state.result && <button className="btn" onClick={() => socket.emit('rematch')}>Jogar de novo</button>}
+      {!room.result && room.moves === 0 && <GamePicker current={room.game} onPick={newMatch} label="Ou escolha outro jogo" />}
     </div>
   )
 }

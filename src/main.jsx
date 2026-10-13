@@ -15,7 +15,7 @@ const rootRoute = createRootRoute({
   component: () => (
     <>
       <header>
-        <Link to="/" className="logo">#4x4</Link>
+        <Link to="/" className="logo">🎲 Jogos</Link>
         <nav>
           <Link to="/settings">Cores</Link>
         </nav>
@@ -30,7 +30,7 @@ const rootRoute = createRootRoute({
 
 const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: '/', component: Home }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/local', component: Local }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/local/$game', component: Local }),
   createRoute({ getParentRoute: () => rootRoute, path: '/room/$code', component: Room }),
   createRoute({ getParentRoute: () => rootRoute, path: '/settings', component: Settings }),
 ])

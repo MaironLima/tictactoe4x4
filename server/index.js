@@ -3,7 +3,8 @@ import { createServer } from 'node:http'
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { Server } from 'socket.io'
-import { emptyBoard, getResult } from '../shared/game.js'
+import { GAMES } from '../shared/games/index.js'
+import { other } from '../shared/games/util.js'
 
 const PORT = process.env.PORT || 3003
 const ROOM_TTL = 10 * 60 * 1000 // sala sem ninguém online por 10min é apagada
@@ -30,30 +31,42 @@ const newCode = () => {
   return code
 }
 
-const publicState = r => ({
-  code: r.code,
-  board: r.board,
-  turn: r.turn,
-  starter: r.starter,
-  result: r.result,
-  scores: r.scores,
-  players: { X: r.seats.X && { online: r.seats.X.online }, O: r.seats.O && { online: r.seats.O.online } },
-})
-const broadcast = r => io.to(r.code).emit('state', publicState(r))
+// cada jogador recebe só o que pode ver (navios e escolhas do oponente ficam escondidos até o fim)
+const publicState = (r, seat) => {
+  const g = GAMES[r.game]
+  return {
+    code: r.code,
+    game: r.game,
+    state: !r.result && g.view ? g.view(r.state, seat) : r.state,
+    result: r.result,
+    moves: r.moves,
+    starter: r.starter,
+    scores: r.scores,
+    players: { X: r.seats.X && { online: r.seats.X.online }, O: r.seats.O && { online: r.seats.O.online } },
+  }
+}
+const broadcast = r => {
+  for (const seat of ['X', 'O'])
+    if (r.seats[seat]?.online) io.to(r.seats[seat].socketId).emit('state', publicState(r, seat))
+}
 
+function startMatch(r, game) {
+  Object.assign(r, { game, state: GAMES[game].init(r.starter), result: null, moves: 0, touched: Date.now() })
+}
+
+// jogo via query string (?game=c4): mantém o POST "simple request", sem preflight de CORS
 app.post('/api/rooms', (req, res) => {
-  const code = newCode()
-  rooms.set(code, {
-    code, board: emptyBoard(), turn: 'X', starter: 'X', result: null,
-    scores: { X: 0, O: 0, draw: 0 }, seats: { X: null, O: null }, touched: Date.now(),
-  })
-  res.status(201).json({ code })
+  const game = Object.hasOwn(GAMES, req.query.game) ? req.query.game : 'ttt'
+  const r = { code: newCode(), starter: 'X', scores: { X: 0, O: 0, draw: 0 }, seats: { X: null, O: null } }
+  startMatch(r, game)
+  rooms.set(r.code, r)
+  res.status(201).json({ code: r.code })
 })
 
 app.get('/api/rooms/:code', (req, res) => {
   const r = rooms.get(req.params.code.toUpperCase())
   if (!r) return res.status(404).json({ error: 'Sala não encontrada' })
-  res.json(publicState(r))
+  res.json({ code: r.code, game: r.game, players: publicState(r).players })
 })
 
 app.get('/api/stats', (req, res) => res.json({ rooms: rooms.size, online: io.engine.clientsCount }))
@@ -82,24 +95,32 @@ io.on('connection', socket => {
     broadcast(r)
   })
 
-  socket.on('move', index => {
+  socket.on('move', payload => {
     const r = rooms.get(socket.data.code)
     const { symbol } = socket.data
-    if (!r || r.result || r.turn !== symbol || !r.seats.X || !r.seats.O) return
-    if (!Number.isInteger(index) || r.board[index] !== null) return
-    r.board[index] = symbol
-    r.result = getResult(r.board)
+    if (!r || r.result || !r.seats.X || !r.seats.O) return
+    const g = GAMES[r.game]
+    let next
+    try {
+      next = g.move(r.state, symbol, payload) // payload vem do cliente: inválido -> null (ou lança)
+    } catch {
+      return
+    }
+    if (!next) return
+    r.state = next
+    r.moves++
+    r.result = g.result(next)
     if (r.result) r.scores[r.result.winner]++
-    else r.turn = symbol === 'X' ? 'O' : 'X'
     r.touched = Date.now()
     broadcast(r)
   })
 
-  socket.on('rematch', () => {
+  // fim de partida: revanche ou troca de jogo, mesma sala. Antes do 1º lance também pode trocar.
+  socket.on('newMatch', ({ game } = {}) => {
     const r = rooms.get(socket.data.code)
-    if (!r?.result) return
-    r.starter = r.starter === 'X' ? 'O' : 'X' // alterna quem começa
-    Object.assign(r, { board: emptyBoard(), turn: r.starter, result: null, touched: Date.now() })
+    if (!r || !(r.result || r.moves === 0)) return
+    if (r.result) r.starter = other(r.starter) // alterna quem começa
+    startMatch(r, Object.hasOwn(GAMES, game) ? game : r.game)
     broadcast(r)
   })
 

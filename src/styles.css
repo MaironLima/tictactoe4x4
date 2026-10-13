@@ -99,3 +99,82 @@ h1 { margin: 0; }
 
 .color-row { align-items: center; justify-content: center; gap: 16px; }
 .color-row input[type='color'] { flex: 0 0 64px; height: 44px; padding: 2px; }
+
+.btn.primary { background: #2563eb; border-color: #2563eb; }
+.btn.primary:hover:not(:disabled) { background: #1d4ed8; }
+.grow { flex: 1; }
+.game-title { margin: 0; font-size: 1.3rem; }
+.hint { margin: 0; min-height: 1.2em; }
+
+/* home: lista de jogos */
+.games { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.game-card {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center;
+  padding: 12px; border-radius: 12px; background: var(--panel);
+}
+.game-emoji { font-size: 2rem; grid-row: span 2; }
+.game-info { display: flex; flex-direction: column; gap: 2px; }
+.game-actions { display: flex; gap: 8px; grid-column: 2; }
+.game-actions .btn { flex: 1; text-align: center; padding: 8px; min-height: 40px; }
+
+/* trocar de jogo */
+.picker { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.picker .btn { font-size: 14px; padding: 8px; }
+
+/* Ligue 4 */
+.c4 {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: clamp(3px, 1.2vw, 6px);
+  padding: clamp(6px, 2vw, 10px); border-radius: 14px; background: #1d4ed8;
+  width: min(100%, max(260px, (100dvh - 320px) * 7 / 6)); margin: 0 auto;
+}
+.slot { aspect-ratio: 1; padding: 0; border: none; border-radius: 50%; background: var(--bg); cursor: pointer; overflow: hidden; }
+.slot:disabled { cursor: default; }
+.c4:not(.over) .slot:not(:disabled):hover { background: #172036; }
+.disc { display: block; width: 100%; height: 100%; border-radius: 50%; background: currentColor; animation: drop .25s ease-in; }
+.disc.X { color: var(--x); }
+.disc.O { color: var(--o); }
+.c4.over .slot:not(.win) .disc { opacity: .3; }
+.slot.win .disc { box-shadow: 0 0 0 3px #fff inset, 0 0 16px currentColor; animation: winpulse .8s ease-in-out infinite alternate; }
+@keyframes drop { from { transform: translateY(-100%) } }
+
+/* Damas */
+.checkers {
+  display: grid; grid-template-columns: repeat(8, 1fr); border: 4px solid #78350f; border-radius: 4px;
+  width: min(100%, max(260px, 100dvh - 320px)); margin: 0 auto;
+}
+.sq { aspect-ratio: 1; padding: 0; border: none; border-radius: 0; background: #e7d3b0; display: grid; place-items: center; }
+.sq.dark { background: #8b5a2b; cursor: pointer; }
+.sq.movable { box-shadow: inset 0 0 0 2px #fde68a88; }
+.sq.sel { box-shadow: inset 0 0 0 3px #fde047; }
+.sq.target::after { content: ''; width: 34%; height: 34%; border-radius: 50%; background: #fde04799; }
+.sq:disabled { cursor: default; }
+.piece {
+  width: 78%; height: 78%; border-radius: 50%; background: currentColor; display: grid; place-items: center;
+  box-shadow: inset 0 -3px 0 #0005, 0 2px 3px #0006; font-size: clamp(.8rem, 4vw, 1.3rem);
+}
+.piece.X { color: var(--x); }
+.piece.O { color: var(--o); }
+.piece.king::before { content: '♛'; color: #fff; text-shadow: 0 1px 2px #000; }
+
+/* Batalha naval */
+.sea {
+  display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; padding: 2px; border-radius: 6px;
+  background: #0c4a6e; width: 100%; margin: 0 auto;
+}
+.sea.small { width: 62%; }
+.wave { aspect-ratio: 1; padding: 0; border: none; border-radius: 2px; background: #0369a1; position: relative; cursor: pointer; }
+.wave:disabled { cursor: default; }
+.sea:not(.small) .wave:not(:disabled):hover { background: #0284c7; }
+.sea.X .wave.ship { background: color-mix(in srgb, var(--x) 70%, #0f172a); }
+.sea.O .wave.ship { background: color-mix(in srgb, var(--o) 70%, #0f172a); }
+.wave.hit::after, .wave.miss::after { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; }
+.wave.hit::after { content: '✕'; color: #fecaca; background: #dc2626cc; border-radius: 2px; font-size: clamp(.6rem, 3vw, 1rem); }
+.wave.miss::after { content: '•'; color: #e0f2fe; font-size: clamp(.8rem, 4vw, 1.4rem); }
+
+/* Pedra, papel e tesoura */
+.rps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.rps-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 4px; }
+.rps-btn span { font-size: clamp(2.2rem, 12vw, 3.4rem); line-height: 1; }
+.rps-last { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 16px; font-size: clamp(2.6rem, 14vw, 4rem); animation: pop .3s ease-out; }
+.rps-last small { flex-basis: 100%; font-size: 1rem; }
+.color-row span:nth-child(2) { min-width: 6em; text-align: left; }

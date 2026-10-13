@@ -12,10 +12,11 @@ export default function Settings() {
   return (
     <div className="stack">
       <h1>Cores</h1>
-      <p className="muted">Salvo neste navegador. Só muda o que você vê.</p>
+      <p className="muted">Salvo neste navegador. Só muda o que você vê, em todos os jogos.</p>
       {['X', 'O'].map(s => (
         <label key={s} className="row color-row">
-          <span className={`mark big ${s}`}>{s}</span>
+          <span className={`mark big ${s}`}>●</span>
+          <span>Jogador {s === 'X' ? 1 : 2}</span>
           <input type="color" value={colors[s]} onChange={e => update({ ...colors, [s]: e.target.value })} />
         </label>
       ))}
