@@ -2,7 +2,7 @@
 
 ```
 navegador ──HTTPS──> Vercel (build estático do Vite)
-    └─────HTTPS/WSS──> VM Oracle: Caddy :443 ──> Node :3001 (Express + Socket.IO)
+    └─────HTTPS/WSS──> VM Oracle: Caddy :443 ──> Node :3003 (Express + Socket.IO)
 ```
 
 O back **precisa de HTTPS**: a Vercel serve o site em HTTPS e o navegador bloqueia
@@ -30,7 +30,7 @@ sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
 sudo netfilter-persistent save
 ```
 
-(Não abra a 3001 — só o Caddy fala com o Node.)
+(Não abra a 3003 — só o Caddy fala com o Node.)
 
 ### 1.2 Instalar Node 22, git e Caddy
 
@@ -59,7 +59,7 @@ Edite `deploy/tictactoe.service`: troque `CORS_ORIGIN` pela URL da Vercel
 sudo cp deploy/tictactoe.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now tictactoe
-curl localhost:3001/api/stats    # deve responder {"rooms":0,"online":0}
+curl localhost:3003/api/stats    # deve responder {"rooms":0,"online":0}
 ```
 
 ### 1.5 HTTPS com Caddy

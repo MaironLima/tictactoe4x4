@@ -1,5 +1,5 @@
 # /etc/caddy/Caddyfile — HTTPS automático (Let's Encrypt) + proxy pro Node.
 # Sem domínio próprio? Use o IP da VM com sslip.io: 129-146-10-20.sslip.io
 api.seudominio.com {
-	reverse_proxy localhost:3001
+	reverse_proxy localhost:3003
 }

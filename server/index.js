@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { Server } from 'socket.io'
 import { emptyBoard, getResult } from '../shared/game.js'
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 3003
 const ROOM_TTL = 10 * 60 * 1000 // sala sem ninguém online por 10min é apagada
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 // front em outro domínio (Vercel): CORS_ORIGIN=https://app.vercel.app,https://outro.com

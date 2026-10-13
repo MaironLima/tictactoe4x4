@@ -6,8 +6,8 @@ export default defineConfig({
   server: {
     host: true, // permite abrir pelo IP da rede local
     proxy: {
-      '/api': 'http://localhost:3001',
-      '/socket.io': { target: 'http://localhost:3001', ws: true },
+      '/api': 'http://localhost:3003',
+      '/socket.io': { target: 'http://localhost:3003', ws: true },
     },
   },
 })

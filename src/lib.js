@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client'
 
 // produção (Vercel): URL do backend na VM, ex. https://api.seudominio.com
-// dev: vazio, o proxy do Vite manda /api e /socket.io pro localhost:3001
+// dev: vazio, o proxy do Vite manda /api e /socket.io pro localhost:3003
 const API_URL = import.meta.env.VITE_API_URL || ''
 
 export async function api(path, init) {
