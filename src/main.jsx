@@ -17,7 +17,6 @@ const rootRoute = createRootRoute({
       <header>
         <Link to="/" className="logo">#4x4</Link>
         <nav>
-          <Link to="/local">Local</Link>
           <Link to="/settings">Cores</Link>
         </nav>
       </header>
