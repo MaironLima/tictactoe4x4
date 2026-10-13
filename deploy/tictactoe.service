@@ -1,0 +1,17 @@
+# /etc/systemd/system/tictactoe.service
+[Unit]
+Description=Jogo da Velha 4x4 API
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/tictactoe4x4
+ExecStart=/usr/bin/node server/index.js
+Environment=NODE_ENV=production
+Environment=PORT=3001
+Environment=CORS_ORIGIN=https://SEU-APP.vercel.app
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
